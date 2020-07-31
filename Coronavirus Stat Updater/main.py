@@ -39,7 +39,3 @@ class Data:
         return "0"
 
 data = Data(API_KEY, PROJECT_TOKEN)
-print(data.data)
-print(data.get_total_cases())
-print(data.get_total_deaths())
-print(data.get_country_data("india"))
