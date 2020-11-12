@@ -1,0 +1,106 @@
+import discord
+from discord.ext import commands, tasks
+from discord.voice_client import VoiceClient
+import asyncio
+import youtube_dl
+from random import choice
+
+youtube_dl.utils.bug_reports_message = lambda: ''
+ytdl_format_options = {
+    'format': 'bestaduio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'
+}
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+        self.data = data
+        self.title = data.get('title')
+        self.url = data.get('url')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
+
+musicBot = commands.Bot(command_prefix='!')
+status = ['Mode 1', 'Mode 2', 'Mode 3']
+
+
+@musicBot.event
+async def on_ready():
+    change_status.start()
+    print("The bot is online")
+
+
+@musicBot.event
+async def member_join(member):
+    channel = discord.utils.get(member.guild.channels, name='general')
+    await channel.send(f'Welcome {member.mention}!  Ready to jam out? See `?help` command for details!')
+
+
+@musicBot.command(name='intro', help='This command introduces the bot')
+async def intro(ctx):
+    await ctx.send('This a trial of a music bot for discord')
+
+
+@musicBot.command(name='ping', help='This command resturns the latency')
+async def ping(ctx):
+    await ctx.send(f'The ping is: {round(musicBot.latency * 1000)}ms')
+
+
+@musicBot.command(name='credit', help='This returns the name of the person who made this bot')
+async def credit(ctx):
+    await ctx.send('This bot was made by SGFyaXNo')
+
+
+@musicBot.command(name='play', help='This command plays the specified song')
+async def play(ctx, url):
+    if not ctx.message.author.voice:
+        await ctx.send('You are not connected to the voice channel')
+        return
+    else:
+        channel = ctx.message.author.voice.channel
+    await channel.connect()
+    server = ctx.message.guild
+    voice_channel = server.voice_client
+
+    async with ctx.typing():
+        player = await YTDLSource.from_url(url, loop=musicBot.loop)
+        voice_channel.play(player, after=lambda e:print("Player error: %s" %e) if e else None)
+    await ctx.send(f'**Now Playing:** {player.title}')
+
+
+@musicBot.command(name='leave', help='This command makes hthe bot leave the channel')
+async def leave(ctx):
+    voice = ctx.message.guild.voice_client
+    await voice.disconnect()
+
+
+@tasks.loop(seconds=5)
+async def change_status():
+    await musicBot.change_presence(activity=discord.Game(choice(status)))
+
+musicBot.run('NzczNTE1NTUwODc3ODEwNjg4.X6KWfg.HG6eYyyEdeyW2JfGKoHG8xMFmQo')
