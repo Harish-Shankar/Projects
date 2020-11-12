@@ -103,4 +103,4 @@ async def leave(ctx):
 async def change_status():
     await musicBot.change_presence(activity=discord.Game(choice(status)))
 
-musicBot.run('NzczNTE1NTUwODc3ODEwNjg4.X6KWfg.HG6eYyyEdeyW2JfGKoHG8xMFmQo')
+musicBot.run('')
