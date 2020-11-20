@@ -102,7 +102,6 @@ async def play(ctx):
         del(musicURL[0])
         del(songName[0])
     await ctx.send(f'**Now Playing:** {player.title}')
-print('song is over')
 
 
 @musicBot.command(name='pause', help='This command pauses the current song')
@@ -158,5 +157,4 @@ async def view(ctx):
 async def change_status():
     await musicBot.change_presence(activity=discord.Game(choice(status)))
 
-print('okay')
 musicBot.run('')
