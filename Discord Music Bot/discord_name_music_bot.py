@@ -159,4 +159,4 @@ async def change_status():
     await musicBot.change_presence(activity=discord.Game(choice(status)))
 
 print('okay')
-musicBot.run('NzczNTE1NTUwODc3ODEwNjg4.X6KWfg.hGjbMB-9dY2J611wUGKfGRzkgQ8')
+musicBot.run('')
