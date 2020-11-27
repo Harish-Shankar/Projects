@@ -5,6 +5,7 @@ from youtube_search import YoutubeSearch
 import asyncio
 import youtube_dl
 from random import choice
+import os, glob
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 ytdl_format_options = {
@@ -95,6 +96,8 @@ async def play(ctx):
     global musicURL, songName
     server = ctx.message.guild
     voice_channel = server.voice_client
+    for f in glob.glob('C:/Users/harish/PycharmProjects/MyStuff/Discord Music Bot/youtube*'):
+        os.remove(f)
 
     async with ctx.typing():
         player = await YTDLSource.from_url(musicURL[0], loop=musicBot.loop)
